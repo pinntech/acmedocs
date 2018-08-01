@@ -1,0 +1,10 @@
+{
+  "generator-openapi-repo": {
+    "importExistingSpec": false,
+    "name": "ACME Bank",
+    "repo": "pinntech/acmedocs",
+    "splitSpec": false,
+    "samples": true,
+    "installSwaggerUI": false
+  }
+}
