@@ -70,8 +70,20 @@ paths:
               created: 1533171964
         '400':
           description: Bad Request
+          schema: 
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
         '422':
           description: Palm Not Found
+          schema: 
+            $ref: '#/definitions/Error'
+          examples:
+            code: 422
+            message: Palm could not be detected in the provided image.
+            type: palm_not_found
   '/login':
     post:
       tags:
@@ -113,8 +125,28 @@ paths:
               created: 1533171964
         '400':
           description: Bad Request
+          schema: 
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unauthorized
+          schema: 
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or other security parameters were invalid
+            type: unauthorized
         '422':
           description: Palm Not Found
+          schema: 
+            $ref: '#/definitions/Error'
+          examples:
+            code: 422
+            message: Palm could not be detected in the provided image.
+            type: palm_not_found
 
 definitions:
   User:
@@ -142,4 +174,20 @@ definitions:
         description: Timestamp of creation, an integer that is the number of seconds since unix epoch
         type: integer
         example: 1533171964
+  Error:
+    type: object
+    properties:
+      code:
+        description: The HTTP Response status code
+        type: integer
+        example: 400
+      message:
+        description: Developer friendly error message
+        type: string
+        example: The browser (or proxy) sent a request that this server could not understand.
+      type:
+        description: A type value for the error, that is a static string and can be used for more robust error handling than the code value
+        type: string
+        example: bad_request
+
 
