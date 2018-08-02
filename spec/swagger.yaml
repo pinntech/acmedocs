@@ -45,8 +45,7 @@ paths:
             required:
               - username
               - password
-              - left_palm
-              - right_palm
+              - palm
             properties:
               username:
                 type: string
@@ -56,14 +55,20 @@ paths:
                 type: string
                 description: Password supplied by the end user for credential auth
                 example: p1nnc0de
-              left_palm:
-                type: string
-                description: Base64 encoded JPEG data of the left palm capture image
-                example: MII...==
-              right_palm:
-                type: string
-                description: Base64 encoded JPEG data of the right palm capture image
-                example: MII...==
+              palm:
+                type: object
+                description: Structure for palm biometric data, both left and right are required for registration
+                properties:
+                  left:
+                    type: string
+                    description: Base64 encoded JPEG data of the left palm capture image
+                  right:
+                    type: string
+                    description: Base64 encoded JPEG data of the right palm capture image
+                example: 
+                  palm:
+                    left: MII...==
+                    right: MII...==
       responses:
         '200':
           description: Ok
@@ -120,9 +125,18 @@ paths:
                 description: Password supplied by the end user logging in
                 example: p1nnc0de
               palm:
-                type: string
-                description: Base64 encoded JPEG data of the left or right palm capture image
-                example: MII...==
+                type: object
+                description: Structure for palm biometric data, either left or right is required for login
+                properties:
+                  left:
+                    type: string
+                    description: Base64 encoded JPEG data of the left palm capture image
+                  right:
+                    type: string
+                    description: Base64 encoded JPEG data of the right palm capture image
+                example: 
+                  palm:
+                    left: MII...==
       responses:
         '200':
           description: Ok
@@ -201,5 +215,3 @@ definitions:
         description: A type value for the error, that is a static string and can be used for more robust error handling than the code value
         type: string
         example: bad_request
-
-
