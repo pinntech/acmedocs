@@ -14,7 +14,7 @@ info:
   version: '0.1.0'
   title: ACME Bank API
   x-logo:
-    url: 'https://apis.guru/openapi-template/logo.png'
+    url: 'https://raw.githubusercontent.com/pinntech/acmedocs/master/web/logo.png'
 produces:
   - application/json
 consumes:
