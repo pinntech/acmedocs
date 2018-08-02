@@ -46,6 +46,7 @@ paths:
               - username
               - password
               - palm
+              - public_key
             properties:
               username:
                 type: string
@@ -68,6 +69,10 @@ paths:
                 example: 
                     left: MII...==
                     right: MII...==
+              public_key:
+                type: string
+                description: PEM encoded local authentication public key, the matching private key will be used for generating the digital signatures.
+                example: -----BEGIN PUBLIC KEY-----\nMEkwEwYHKoZIzj0CAQYIKoZIzj0DAQMDMgAE+Y+qPqI3geo2hQH8eK7Rn+YWG09T\nejZ5QFoj9fmxFrUyYhFap6XmTdJtEi8myBmW\n-----END PUBLIC KEY-----
       responses:
         '200':
           description: Ok
@@ -104,6 +109,11 @@ paths:
       description: This endpoint "logs in" a user with their existing credentials and captured biometric data
       operationId: login
       parameters:
+        - in: header
+          name: Signature
+          type: string
+          required: true
+          description: A request signature, the keyId should be the fingerprint of the public key. Specification for the signatures can be found at the following link https://tools.ietf.org/html/draft-cavage-http-signatures-10
         - in: body
           name: body
           description: Authentication parameters
