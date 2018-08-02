@@ -43,19 +43,26 @@ paths:
             type: object
             required:
               - username
+              - password
+              - left_palm
+              - right_palm
             properties:
               username:
                 type: string
                 description: Username supplied by the end user registering
+                example: dmwesterhoff
               password:
                 type: string
                 description: Password supplied by the end user for credential auth
+                example: p1nnc0de
               left_palm:
                 type: string
                 description: Base64 encoded JPEG data of the left palm capture image
+                example: MII...==
               right_palm:
                 type: string
                 description: Base64 encoded JPEG data of the right palm capture image
+                example: MII...==
       responses:
         '200':
           description: Ok
@@ -105,12 +112,15 @@ paths:
               username:
                 type: string
                 description: Username supplied by the end user logging in
+                example: dmwesterhoff
               password:
                 type: string
                 description: Password supplied by the end user logging in
+                example: p1nnc0de
               palm:
                 type: string
                 description: Base64 encoded JPEG data of the left or right palm capture image
+                example: MII...==
       responses:
         '200':
           description: Ok
