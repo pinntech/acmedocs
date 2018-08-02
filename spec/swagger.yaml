@@ -5,11 +5,11 @@ host: acme.pinnapis.com
 basePath: /
 info:
   description: |
-    The ACME Bank backend is a demonstrable web server that provides a 
+    The ACME Bank backend is a demonstration web server that provides a 
     REST API for both registration and login. Its main purpose is to be
     a consumer of the Pinn hosted REST APIs. Its major functionality is
     supporting the registration of new users (and enrolling their biometrics),
-    as well as authetnicating a user with both biometrics and traditional
+    as well as authenticating a user with both biometrics and traditional
     credentials
   version: '0.1.0'
   title: ACME Bank API
@@ -31,14 +31,15 @@ paths:
     post:
       tags:
         - Register
-      summary: Sign up endpoint for new users
-      description: This endpoint creates and persists the user, sets their
-       chosen password, and finally enroll their biometric data
+      summary: Sign-up endpoint for new users
+      description: This endpoint creates and persists the user, records their
+       chosen password, and finally enrolls their biometric data
       operationId: register
       parameters:
         - in: body
           name: body
           description: Parameters for user registration
+          required: true
           schema:
             type: object
             required:
@@ -95,13 +96,14 @@ paths:
     post:
       tags:
         - Login
-      summary: A sign in endpoint for existing users
+      summary: A sign-in endpoint for existing users
       description: This endpoint "logs in" a user with their existing credentials and captured biometric data
       operationId: login
       parameters:
         - in: body
           name: body
           description: Authentication parameters
+          required: true
           schema:
             type: object
             required:
