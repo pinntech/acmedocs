@@ -5,35 +5,28 @@ host: acme.pinnapis.com
 basePath: /
 info:
   description: |
-    The ACME Bank backend is a demonstration web server that provides a 
+    The Acme Bank backend is a demonstration web server that provides a 
     REST API for both registration and login. Its main purpose is to be
     a consumer of the Pinn hosted REST APIs. Its major functionality is
     supporting the registration of new users (and enrolling their biometrics),
     as well as authenticating a user with both biometrics and traditional
     credentials
   version: '0.1.0'
-  title: ACME Bank API
+  title: Acme Bank API
   x-logo:
     url: 'https://raw.githubusercontent.com/pinntech/acmedocs/master/web/logo.png'
+  
 produces:
   - application/json
 consumes:
   - application/json
 
-tags:
-  - name: Register
-    description: Create and enroll an ACME Bank end user
-  - name: Login
-    description: Authenticate and verify an ACME Bank end user
-
 paths:
   '/register':
     post:
-      tags:
-        - Register
-      summary: Sign-up endpoint for new users
+      summary: Register
       description: This endpoint creates and persists the user, records their
-       chosen password, and finally enrolls their biometric data
+       chosen password, adds the public key to their keychain, and finally enrolls their biometric data
       operationId: register
       parameters:
         - in: body
@@ -103,10 +96,8 @@ paths:
             type: palm_not_found
   '/login':
     post:
-      tags:
-        - Login
-      summary: A sign-in endpoint for existing users
-      description: This endpoint "logs in" a user with their existing credentials and captured biometric data
+      summary: Login
+      description: This endpoint authenticates a user with their existing credentials, captured biometric data and private key signature
       operationId: login
       parameters:
         - in: header
@@ -187,7 +178,7 @@ definitions:
     type: object
     properties:
       id:
-        description: Unique identifier for the ACME Bank user
+        description: Unique identifier for the Acme Bank user
         type: integer
         minLength: 1
         example: 1

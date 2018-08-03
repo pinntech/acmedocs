@@ -1,0 +1,37 @@
+.menu-content {
+    background-color: #ffffff !important;
+}
+.operation-header {
+    font-family: 'Merriweather', serif !important;
+}
+.background {
+    background-color: rgba(250, 252, 252) !important;
+}
+.powered-by-badge {
+    display: none !important;   
+}
+.search-input-wrap {
+    display: none !important;   
+}
+.download-openapi {
+    font-weight: 500 !important;
+}
+.openapi-button {
+    color: #3827b4 !important;
+    border: 1px solid #3827b4 !important;
+}
+.menu-item-header {
+    font-family: 'Merriweather', serif !important;
+    font-weight: 500 !important;
+    font-size: 15px !important;
+}
+p {
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 15px !important;
+}
+h1 {
+    font-family: 'Merriweather', serif !important;
+    font-weight: bolder !important;
+    color: #3827b4 !important;
+}
