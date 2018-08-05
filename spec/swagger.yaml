@@ -10,7 +10,14 @@ info:
     a consumer of the Pinn hosted REST APIs. Its major functionality is
     supporting the registration of new users (and enrolling their biometrics),
     as well as authenticating a user with both biometrics and traditional
-    credentials
+    credentials.
+    <br><br>
+    --------------------------------------------
+    <br>
+    | Environment | Host                        |
+    |-------------|-----------------------------|
+    | Production  | `https://acme.pinnapis.com` |
+
   version: '0.1.0'
   title: Acme Bank API
   x-logo:
