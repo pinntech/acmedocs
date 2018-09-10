@@ -181,7 +181,7 @@ paths:
             message: Palm could not be detected in the provided image.
             type: palm_not_found
   '/browser/api/webhook':
-    get:
+    post:
       summary: Browser - Webhook
       description: Webhook for notifying browser of QR code signature.
       operationId: browserWebhook
