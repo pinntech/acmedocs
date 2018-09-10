@@ -5,7 +5,7 @@ host: acme.pinnapis.com
 basePath: /
 info:
   description: |
-    The Acme Bank backend is a demonstration web server that provides a 
+    The Acme Bank backend is a demonstration web server that provides a
     REST API for both registration and login. Its main purpose is to be
     a consumer of the Pinn hosted REST APIs. Its major functionality is
     supporting the registration of new users (and enrolling their biometrics),
@@ -22,7 +22,7 @@ info:
   title: Acme Bank API
   x-logo:
     url: 'https://raw.githubusercontent.com/pinntech/acmedocs/master/web/logo.png'
-  
+
 produces:
   - application/json
 consumes:
@@ -66,7 +66,7 @@ paths:
                   right:
                     type: string
                     description: Base64 encoded JPEG data of the right palm capture image
-                example: 
+                example:
                     left: MII...==
                     right: MII...==
               public_key:
@@ -76,7 +76,7 @@ paths:
       responses:
         '200':
           description: Ok
-          schema: 
+          schema:
             $ref: '#/definitions/User'
           examples:
             application/json:
@@ -88,7 +88,7 @@ paths:
               key: 76:00:cc:81:29:cd:55:5e:88:6a:7a:2e:f7:4d:39:da
         '400':
           description: Bad Request
-          schema: 
+          schema:
             $ref: '#/definitions/Error'
           examples:
             code: 400
@@ -96,7 +96,7 @@ paths:
             type: bad_request
         '422':
           description: Palm Not Found
-          schema: 
+          schema:
             $ref: '#/definitions/Error'
           examples:
             code: 422
@@ -142,12 +142,12 @@ paths:
                   right:
                     type: string
                     description: Base64 encoded JPEG data of the right palm capture image
-                example: 
+                example:
                     left: MII...==
       responses:
         '200':
           description: Ok
-          schema: 
+          schema:
             $ref: '#/definitions/User'
           examples:
             application/json:
@@ -158,7 +158,7 @@ paths:
               created: 1533171964
         '400':
           description: Bad Request
-          schema: 
+          schema:
             $ref: '#/definitions/Error'
           examples:
             code: 400
@@ -166,7 +166,7 @@ paths:
             type: bad_request
         '401':
           description: Unauthorized
-          schema: 
+          schema:
             $ref: '#/definitions/Error'
           examples:
             code: 401
@@ -174,14 +174,143 @@ paths:
             type: unauthorized
         '422':
           description: Palm Not Found
-          schema: 
+          schema:
             $ref: '#/definitions/Error'
           examples:
             code: 422
             message: Palm could not be detected in the provided image.
             type: palm_not_found
-
+  '/browser/api/webhook':
+    get:
+      summary: Browser - Webhook
+      description: Webhook for notifying browser of QR code signature.
+      operationId: browserWebhook
+      parameters:
+        - in: body
+          name: body
+          description: Webhook parameters
+          required: true
+          schema:
+            type: object
+            required:
+              - auth_session_id
+              - username
+              - action
+            properties:
+              auth_session_id:
+                type: string
+                description: Authentication session identifier
+                example: authsess_ge56gb1P
+              username:
+                type: string
+                description: Username supplied by the end user logging in
+                example: dmwesterhoff
+              action:
+                type: string
+                description: Action taken by mobile device.
+                enum:
+                  - qrcode_scanned
+                example: qrcode_scanned
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/Webhook'
+          examples:
+            application/json:
+              success: True
+  '/browser/api/login':
+    post:
+      summary: Browser - Login
+      description: |
+        This endpoint authenticates a user with their existing credentials, captured biometric data and private key signature.
+        As opposed to `/login`, this calls upon the browser session to either advance or based on the verification result.
+      operationId: browserLogin
+      parameters:
+        - in: header
+          name: Signature
+          type: string
+          required: true
+          description: A request signature, the keyId should be the fingerprint of the public key. Specification for the signatures can be found at the following link https://tools.ietf.org/html/draft-cavage-http-signatures-10
+        - in: body
+          name: body
+          description: Authentication parameters
+          required: true
+          schema:
+            type: object
+            required:
+              - auth_session_id
+              - username
+              - password
+              - palm
+            properties:
+              auth_session_id:
+                type: string
+                description: Authentication session identifier
+                example: authsess_ge56gb1P
+              username:
+                type: string
+                description: Username supplied by the end user logging in
+                example: dmwesterhoff
+              password:
+                type: string
+                description: Password supplied by the end user logging in
+                example: p1nnc0de
+              palm:
+                type: object
+                description: Structure for palm biometric data, either left or right is required for login
+                properties:
+                  left:
+                    type: string
+                    description: Base64 encoded JPEG data of the left palm capture image
+                  right:
+                    type: string
+                    description: Base64 encoded JPEG data of the right palm capture image
+                example:
+                    left: MII...==
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/User'
+          examples:
+            application/json:
+              id: 1
+              username: dmwesterhoff
+              pinn_user_id: usr_RMcDzQsFw6g7lhmk
+              object: user
+              created: 1533171964
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or other security parameters were invalid
+            type: unauthorized
+        '422':
+          description: Palm Not Found
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 422
+            message: Palm could not be detected in the provided image.
+            type: palm_not_found
 definitions:
+  Webhook:
+    type: object
+    properties:
+      success:
+        description: Webhook Response
+        type: boolean
   User:
     type: object
     properties:
