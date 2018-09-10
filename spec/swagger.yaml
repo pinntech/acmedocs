@@ -194,17 +194,12 @@ paths:
             type: object
             required:
               - auth_session_id
-              - username
               - action
             properties:
               auth_session_id:
                 type: string
                 description: Authentication session identifier
                 example: authsess_ge56gb1P
-              username:
-                type: string
-                description: Username supplied by the end user logging in
-                example: dmwesterhoff
               action:
                 type: string
                 description: Action taken by mobile device.
