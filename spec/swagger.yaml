@@ -29,9 +29,110 @@ consumes:
   - application/json
 
 paths:
+  '/register/info':
+    post:
+      summary: Register (Info)
+      description: Begin registration by inputting basic user account information
+      operationId: registerInfo
+      parameters:
+        - in: body
+          name: body
+          description: Parameters for user info registration
+          required: true
+          schema:
+            type: object
+            required:
+              - username
+              - password
+              - mobile_number
+            properties:
+              username:
+                type: string
+                description: Username supplied by the end user registering
+                example: dmwesterhoff
+              password:
+                type: string
+                description: Password supplied by the end user for credential auth
+                example: p1nnc0de
+              mobile_number:
+                type: string
+                description: Mobile phone number submitted as E.164
+                example: "+15103665689"
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/Token'
+          examples:
+            application/json:
+              token: <long_token_string_value>
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '422':
+          description: User Exists
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 422
+            message: Cannot continue because user already exists (push them to login?)
+            type: user_exists
+  '/register/redeem-sms-code':
+    post:
+      summary: Register (Redeem SMS Code)
+      description: Continue registration by inputting the SMS code sent to the given mobile number
+      operationId: registerRedeemSmsCode
+      parameters:
+        - in: body
+          name: body
+          description: Parameters for user info registration
+          required: true
+          schema:
+            type: object
+            required:
+              - token
+              - code
+            properties:
+              token:
+                type: string
+                description: Token as given from the response of the previous call
+                example: dmwesterhoff
+              code:
+                type: string
+                description: The code sent via SMS to the provided mobile number
+                example: 123456
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/Token'
+          examples:
+            application/json:
+              token: <long_token_string_value>
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '422':
+          description: User Exists
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 422
+            message: Cannot continue because user already exists (push them to login?)
+            type: user_exists
   '/register':
     post:
-      summary: Register
+      summary: Register (Finalize)
       description: This endpoint creates and persists the user, records their
        chosen password, adds the public key to their keychain, and finally enrolls their biometric data
       operationId: register
@@ -43,33 +144,33 @@ paths:
           schema:
             type: object
             required:
-              - username
-              - password
+              - token
               - palm
               - public_key
+              - local_auth_public_key
             properties:
-              username:
+              token:
                 type: string
-                description: Username supplied by the end user registering
+                description: Token as given from the response of the previous call
                 example: dmwesterhoff
-              password:
-                type: string
-                description: Password supplied by the end user for credential auth
-                example: p1nnc0de
               palm:
                 type: object
                 description: Structure for palm biometric data, both left and right are required for registration
                 properties:
                   left:
                     type: string
-                    description: Base64 encoded JPEG data of the left palm capture image
+                    description: Base64 encoded model data of the left palm capture image
                   right:
                     type: string
-                    description: Base64 encoded JPEG data of the right palm capture image
+                    description: Base64 encoded model data of the right palm capture image
                 example:
                     left: MII...==
                     right: MII...==
               public_key:
+                type: string
+                description: PEM encoded local authentication public key, the matching private key will be used for generating the digital signatures.
+                example: -----BEGIN PUBLIC KEY-----\nMEkwEwYHKoZIzj0CAQYIKoZIzj0DAQMDMgAE+Y+qPqI3geo2hQH8eK7Rn+YWG09T\nejZ5QFoj9fmxFrUyYhFap6XmTdJtEi8myBmW\n-----END PUBLIC KEY-----
+              local_auth_public_key:
                 type: string
                 description: PEM encoded local authentication public key, the matching private key will be used for generating the digital signatures.
                 example: -----BEGIN PUBLIC KEY-----\nMEkwEwYHKoZIzj0CAQYIKoZIzj0DAQMDMgAE+Y+qPqI3geo2hQH8eK7Rn+YWG09T\nejZ5QFoj9fmxFrUyYhFap6XmTdJtEi8myBmW\n-----END PUBLIC KEY-----
@@ -113,37 +214,144 @@ paths:
           type: string
           required: true
           description: A request signature, the keyId should be the fingerprint of the public key. Specification for the signatures can be found at the following link https://tools.ietf.org/html/draft-cavage-http-signatures-10
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/User'
+          examples:
+            application/json:
+              id: 1
+              username: dmwesterhoff
+              pinn_user_id: usr_RMcDzQsFw6g7lhmk
+              object: user
+              created: 1533171964
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or other security parameters were invalid
+            type: unauthorized
+        '422':
+          description: Palm Not Found
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 422
+            message: Palm could not be detected in the provided image.
+            type: palm_not_found
+  '/stepup/billpay':
+    post:
+      summary: Step-up (Bill Pay)
+      description: This endpoint authenticates a user with their existing credentials, captured biometric data and private key signature
+      operationId: stepupBillPay
+      parameters:
+        - in: header
+          name: Signature
+          type: string
+          required: true
+          description: A request signature, the keyId should be the fingerprint of the public key. Specification for the signatures can be found at the following link https://tools.ietf.org/html/draft-cavage-http-signatures-10
         - in: body
           name: body
-          description: Authentication parameters
+          description: Parameters for user registration
           required: true
           schema:
             type: object
             required:
-              - username
-              - password
               - palm
             properties:
-              username:
-                type: string
-                description: Username supplied by the end user logging in
-                example: dmwesterhoff
-              password:
-                type: string
-                description: Password supplied by the end user logging in
-                example: p1nnc0de
               palm:
                 type: object
-                description: Structure for palm biometric data, either left or right is required for login
+                description: Structure for palm biometric data, both left and right are required for registration
                 properties:
                   left:
                     type: string
-                    description: Base64 encoded JPEG data of the left palm capture image
+                    description: Base64 encoded model data of the left palm capture image
                   right:
                     type: string
-                    description: Base64 encoded JPEG data of the right palm capture image
+                    description: Base64 encoded model data of the right palm capture image
                 example:
                     left: MII...==
+                    right: MII...==
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/User'
+          examples:
+            application/json:
+              id: 1
+              username: dmwesterhoff
+              pinn_user_id: usr_RMcDzQsFw6g7lhmk
+              object: user
+              created: 1533171964
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or other security parameters were invalid
+            type: unauthorized
+        '422':
+          description: Palm Not Found
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 422
+            message: Palm could not be detected in the provided image.
+            type: palm_not_found
+  '/stepup/transfer':
+    post:
+      summary: Step-up (Transfer)
+      description: This endpoint authenticates a user with their existing credentials, captured biometric data and private key signature
+      operationId: stepupTransfer
+      parameters:
+        - in: header
+          name: Signature
+          type: string
+          required: true
+          description: A request signature, the keyId should be the fingerprint of the public key. Specification for the signatures can be found at the following link https://tools.ietf.org/html/draft-cavage-http-signatures-10
+        - in: body
+          name: body
+          description: Parameters for user registration
+          required: true
+          schema:
+            type: object
+            required:
+              - palm
+            properties:
+              palm:
+                type: object
+                description: Structure for palm biometric data, both left and right are required for registration
+                properties:
+                  left:
+                    type: string
+                    description: Base64 encoded model data of the left palm capture image
+                  right:
+                    type: string
+                    description: Base64 encoded model data of the right palm capture image
+                example:
+                    left: MII...==
+                    right: MII...==
       responses:
         '200':
           description: Ok
@@ -300,6 +508,12 @@ paths:
             message: Palm could not be detected in the provided image.
             type: palm_not_found
 definitions:
+  Token:
+    type: object
+    properties:
+      token:
+        description: Token Value
+        type: string
   Webhook:
     type: object
     properties:
