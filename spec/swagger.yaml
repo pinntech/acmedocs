@@ -437,9 +437,63 @@ paths:
           examples:
             application/json:
               success: true
+  '/browser/api/qr':
+    post:
+      summary: Browser - QR
+      description: |
+        This endpoint authenticates a user with the device PKI and QR code provided to the user for scanning.
+        The signature must come from a local auth private key.
+      operationId: browserQR
+      parameters:
+        - in: header
+          name: Signature
+          type: string
+          required: true
+          description: A request signature, the keyId should be the fingerprint of the public key. Specification for the signatures can be found at the following link https://tools.ietf.org/html/draft-cavage-http-signatures-10
+        - in: body
+          name: body
+          description: Authentication parameters
+          required: true
+          schema:
+            type: object
+            required:
+              - auth_session_id
+            properties:
+              auth_session_id:
+                type: string
+                description: Authentication session identifier
+                example: authsess_ge56gb1P
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/User'
+          examples:
+            application/json:
+              id: 1
+              username: dmwesterhoff
+              pinn_user_id: usr_RMcDzQsFw6g7lhmk
+              object: user
+              created: 1533171964
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or other security parameters were invalid
+            type: unauthorized
   '/browser/api/login':
     post:
-      summary: Browser - Login
+      summary: Browser - Login (Deprecated)
       description: |
         This endpoint authenticates a user with their existing credentials, captured biometric data and private key signature.
         As opposed to `/login`, this calls upon the browser session to either advance or based on the verification result.
