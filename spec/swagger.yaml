@@ -117,7 +117,7 @@ paths:
             code: 401
             message: Invalid Token
             type: unauthorized
-  '/register/redeem-sms-code':
+  '/register/redeem_sms_code':
     post:
       summary: Register (Redeem SMS Code)
       description: Continue registration by inputting the SMS code sent to the given mobile number
