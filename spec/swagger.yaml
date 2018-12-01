@@ -32,7 +32,9 @@ paths:
   '/register/credentials':
     post:
       summary: Register (Credentials)
-      description: Begin registration by inputting username/password combination
+      description: |
+        Begin registration by inputting username/password combination.
+        Handle for account recovery flow based on `type` in response
       operationId: registerCredentials
       parameters:
         - in: body
@@ -61,6 +63,7 @@ paths:
           examples:
             application/json:
               token: <long_token_string_value>
+              type: mobile_number | redeem_sms_code
         '400':
           description: Bad Request
           schema:
@@ -101,6 +104,7 @@ paths:
           examples:
             application/json:
               token: <long_token_string_value>
+              type: redeem_sms_code
         '400':
           description: Bad Request
           schema:
@@ -149,6 +153,7 @@ paths:
           examples:
             application/json:
               token: <long_token_string_value>
+              type: finalize
         '400':
           description: Bad Request
           schema:
@@ -236,7 +241,7 @@ paths:
               pinn_user_id: usr_RMcDzQsFw6g7lhmk
               object: user
               created: 1533171964
-              key: 76:00:cc:81:29:cd:55:5e:88:6a:7a:2e:f7:4d:39:da
+              devices: [list of devices + keys (Grab latest for account recov ery flows)]
         '400':
           description: Bad Request
           schema:
@@ -284,6 +289,7 @@ paths:
               pinn_user_id: usr_RMcDzQsFw6g7lhmk
               object: user
               created: 1533171964
+              devices: [list of devices + keys (Grab latest for account recov ery flows)]
         '400':
           description: Bad Request
           schema:
@@ -347,6 +353,7 @@ paths:
               pinn_user_id: usr_RMcDzQsFw6g7lhmk
               object: user
               created: 1533171964
+              devices: [list of devices + keys (Grab latest for account recov ery flows)]
         '400':
           description: Bad Request
           schema:
@@ -418,6 +425,7 @@ paths:
               pinn_user_id: usr_RMcDzQsFw6g7lhmk
               object: user
               created: 1533171964
+              devices: [list of devices + keys (Grab latest for account recov ery flows)]
         '400':
           description: Bad Request
           schema:
@@ -514,6 +522,7 @@ paths:
               pinn_user_id: usr_RMcDzQsFw6g7lhmk
               object: user
               created: 1533171964
+              devices: [list of devices + keys (Grab latest for account recov ery flows)]
         '400':
           description: Bad Request
           schema:
