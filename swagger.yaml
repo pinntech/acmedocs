@@ -1,0 +1,599 @@
+swagger: '2.0'
+schemes:
+  - https
+host: acme.pinnapis.com
+basePath: /
+info:
+  description: |
+    The Acme Bank backend is a demonstration web server that provides a
+    REST API for both registration and login. Its main purpose is to be
+    a consumer of the Pinn hosted REST APIs. Its major functionality is
+    supporting the registration of new users (and enrolling their biometrics),
+    as well as authenticating a user with both biometrics and traditional
+    credentials.
+    <br><br>
+    --------------------------------------------
+    <br>
+    | Environment | Host                        |
+    |-------------|-----------------------------|
+    | Production  | `https://acme.pinnapis.com` |
+  version: 0.1.0
+  title: Acme Bank API
+  x-logo:
+    url: 'https://raw.githubusercontent.com/pinntech/acmedocs/master/web/logo.png'
+produces:
+  - application/json
+consumes:
+  - application/json
+paths:
+  /register/credentials:
+    post:
+      summary: Register (Credentials)
+      description: |
+        Begin registration by inputting username/password combination.
+        Handle for account recovery flow based on `type` in response
+      operationId: registerCredentials
+      parameters:
+        - in: body
+          name: body
+          description: Parameters for user info registration
+          required: true
+          schema:
+            type: object
+            required:
+              - username
+              - password
+            properties:
+              username:
+                type: string
+                description: Username supplied by the end user registering
+                example: dmwesterhoff
+              password:
+                type: string
+                description: Password supplied by the end user for credential auth
+                example: p1nnc0de
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/Token'
+          examples:
+            application/json:
+              token: <long_token_string_value>
+              type: mobile_number | redeem_sms_code
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+  /register/mobile_number:
+    post:
+      summary: Register (Mobile Number)
+      description: Follow credentials with mobile number and registration token
+      operationId: registerMobileNumber
+      parameters:
+        - in: body
+          name: body
+          description: Parameters to authorize mobile number
+          required: true
+          schema:
+            type: object
+            required:
+              - token
+              - mobile_number
+            properties:
+              token:
+                type: string
+                description: Token as given from the response of the previous call
+                example: <long_token_string_value>
+              mobile_number:
+                type: string
+                description: Mobile phone number submitted as E.164
+                example: '+15103665689'
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/Token'
+          examples:
+            application/json:
+              token: <long_token_string_value>
+              type: redeem_sms_code
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unable to authorize request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: Invalid Token
+            type: unauthorized
+  /register/redeem_sms_code:
+    post:
+      summary: Register (Redeem SMS Code)
+      description: Continue registration by inputting the SMS code sent to the given mobile number
+      operationId: registerRedeemSmsCode
+      parameters:
+        - in: body
+          name: body
+          description: Parameterss to redeem SMS code
+          required: true
+          schema:
+            type: object
+            required:
+              - token
+              - code
+            properties:
+              token:
+                type: string
+                description: Token as given from the response of the previous call
+                example: <long_token_string_value>
+              code:
+                type: string
+                description: The code sent via SMS to the provided mobile number
+                example: 123456
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/Token'
+          examples:
+            application/json:
+              token: <long_token_string_value>
+              type: finalize
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unable to authorize request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: Invalid Token / Incorrect Code
+            type: unauthorized
+  /register:
+    post:
+      summary: Register (Finalize)
+      description: 'This endpoint creates and persists the user, records their chosen password, adds the public key to their keychain, and finally enrolls their biometric data'
+      operationId: register
+      parameters:
+        - in: body
+          name: body
+          description: Parameters for user registration
+          required: true
+          schema:
+            type: object
+            required:
+              - token
+              - palm
+              - public_key
+              - local_auth_public_key
+              - device_name
+              - platform
+              - platform_version
+            properties:
+              token:
+                type: string
+                description: Token as given from the response of the previous call
+                example: <long_token_string_value>
+              palm:
+                type: object
+                description: 'Structure for palm biometric data, both left and right are required for registration'
+                properties:
+                  left:
+                    type: string
+                    description: Base64 encoded model data of the left palm capture image
+                  right:
+                    type: string
+                    description: Base64 encoded model data of the right palm capture image
+                example:
+                  left: MII...==
+                  right: MII...==
+              public_key:
+                type: string
+                description: 'PEM encoded public key, the matching private key will be used for generating the digital signatures.'
+                example: '-----BEGIN PUBLIC KEY-----\nMEkwEwYHKoZIzj0CAQYIKoZIzj0DAQMDMgAE+Y+qPqI3geo2hQH8eK7Rn+YWG09T\nejZ5QFoj9fmxFrUyYhFap6XmTdJtEi8myBmW\n-----END PUBLIC KEY-----'
+              local_auth_public_key:
+                type: string
+                description: 'PEM encoded local authentication public key, the matching private key will be used for generating the digital signatures.'
+                example: '-----BEGIN PUBLIC KEY-----\nMEkwEwYHKoZIzj0CAQYIKoZIzj0DAQMDMgAE+Y+qPqI3geo2hQH8eK7Rn+YWG09T\nejZ5QFoj9fmxFrUyYhFap6XmTdJtEi8myBmW\n-----END PUBLIC KEY-----'
+              device_name:
+                type: string
+                description: Device name
+                example: Pete's iPhone XR
+              platform:
+                type: string
+                description: Operating system
+                example: iOS
+              platform_version:
+                type: string
+                description: Operating system version
+                example: 10.0.1
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/User'
+          examples:
+            application/json:
+              id: 1
+              username: dmwesterhoff
+              pinn_user_id: usr_RMcDzQsFw6g7lhmk
+              object: user
+              created: 1533171964
+              devices:
+                - list of devices + keys (Grab latest for account recov ery flows)
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unable to authorize request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: Invalid Token
+            type: unauthorized
+        '422':
+          description: Palm Not Found
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 422
+            message: Palm could not be detected in the provided image.
+            type: palm_not_found
+  /login:
+    post:
+      summary: Login
+      description: This endpoint authenticates a user with their local auth private key signature
+      operationId: login
+      parameters:
+        - in: header
+          name: Signature
+          type: string
+          required: true
+          description: 'A request signature, the keyId should be the fingerprint of the public key. Specification for the signatures can be found at the following link https://tools.ietf.org/html/draft-cavage-http-signatures-10'
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/User'
+          examples:
+            application/json:
+              id: 1
+              username: dmwesterhoff
+              pinn_user_id: usr_RMcDzQsFw6g7lhmk
+              object: user
+              created: 1533171964
+              devices:
+                - list of devices + keys (Grab latest for account recov ery flows)
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: 'The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or other security parameters were invalid'
+            type: unauthorized
+  /stepup/billpay:
+    post:
+      summary: Step-up (Bill Pay)
+      description: |
+        This endpoint will be used for step-up prompts. Based on the current use-cases, the signature header will be
+        signed with a `public_key`, one that does not necessitate local authentication.
+      operationId: stepupBillPay
+      parameters:
+        - in: header
+          name: Signature
+          type: string
+          required: true
+          description: 'A request signature, the keyId should be the fingerprint of the public key. Specification for the signatures can be found at the following link https://tools.ietf.org/html/draft-cavage-http-signatures-10'
+        - in: body
+          name: body
+          description: Parameters for user registration
+          required: true
+          schema:
+            type: object
+            required:
+              - palm
+            properties:
+              palm:
+                type: object
+                description: 'Structure for palm biometric data, both left and right are required for registration'
+                properties:
+                  left:
+                    type: string
+                    description: Base64 encoded model data of the left palm capture image
+                  right:
+                    type: string
+                    description: Base64 encoded model data of the right palm capture image
+                example:
+                  left: MII...==
+                  right: MII...==
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/User'
+          examples:
+            application/json:
+              id: 1
+              username: dmwesterhoff
+              pinn_user_id: usr_RMcDzQsFw6g7lhmk
+              object: user
+              created: 1533171964
+              devices:
+                - list of devices + keys (Grab latest for account recov ery flows)
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: 'The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or other security parameters were invalid'
+            type: unauthorized
+        '422':
+          description: Palm Not Found
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 422
+            message: Palm could not be detected in the provided image.
+            type: palm_not_found
+  /stepup/transfer:
+    post:
+      summary: Step-up (Transfer)
+      description: |
+        This endpoint will be used for step-up prompts. Based on the current use-cases, the signature header will be
+        signed with a `local_auth_public_key`, one that does not necessitate local authentication.
+      operationId: stepupTransfer
+      parameters:
+        - in: header
+          name: Signature
+          type: string
+          required: true
+          description: 'A request signature, the keyId should be the fingerprint of the public key. Specification for the signatures can be found at the following link https://tools.ietf.org/html/draft-cavage-http-signatures-10'
+        - in: body
+          name: body
+          description: Parameters for user registration
+          required: true
+          schema:
+            type: object
+            required:
+              - palm
+            properties:
+              palm:
+                type: object
+                description: 'Structure for palm biometric data, both left and right are required for registration'
+                properties:
+                  left:
+                    type: string
+                    description: Base64 encoded model data of the left palm capture image
+                  right:
+                    type: string
+                    description: Base64 encoded model data of the right palm capture image
+                example:
+                  left: MII...==
+                  right: MII...==
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/User'
+          examples:
+            application/json:
+              id: 1
+              username: dmwesterhoff
+              pinn_user_id: usr_RMcDzQsFw6g7lhmk
+              object: user
+              created: 1533171964
+              devices:
+                - list of devices + keys (Grab latest for account recov ery flows)
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: 'The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or other security parameters were invalid'
+            type: unauthorized
+        '422':
+          description: Palm Not Found
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 422
+            message: Palm could not be detected in the provided image.
+            type: palm_not_found
+  /browser/api/webhook:
+    post:
+      summary: Browser - Webhook
+      description: Webhook for notifying browser of QR code signature.
+      operationId: browserWebhook
+      parameters:
+        - in: body
+          name: body
+          description: Webhook parameters
+          required: true
+          schema:
+            type: object
+            required:
+              - auth_session_id
+              - action
+            properties:
+              auth_session_id:
+                type: string
+                description: Authentication session identifier
+                example: authsess_ge56gb1P
+              action:
+                type: string
+                description: Action taken by mobile device.
+                enum:
+                  - qrcode_scanned
+                example: qrcode_scanned
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/Webhook'
+          examples:
+            application/json:
+              success: true
+  /browser/api/login:
+    post:
+      summary: Browser - Login
+      description: |
+        This endpoint authenticates a user with the device PKI and QR code provided to the user for scanning.
+        The signature must come from a local auth private key.
+      operationId: browserLogin
+      parameters:
+        - in: header
+          name: Signature
+          type: string
+          required: true
+          description: 'A request signature, the keyId should be the fingerprint of the public key. Specification for the signatures can be found at the following link https://tools.ietf.org/html/draft-cavage-http-signatures-10'
+        - in: body
+          name: body
+          description: Authentication parameters
+          required: true
+          schema:
+            type: object
+            required:
+              - auth_session_id
+            properties:
+              auth_session_id:
+                type: string
+                description: Authentication session identifier
+                example: authsess_ge56gb1P
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/User'
+          examples:
+            application/json:
+              id: 1
+              username: dmwesterhoff
+              pinn_user_id: usr_RMcDzQsFw6g7lhmk
+              object: user
+              created: 1533171964
+              devices:
+                - list of devices + keys (Grab latest for account recov ery flows)
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 400
+            message: The browser (or proxy) sent a request that this server could not understand.
+            type: bad_request
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+          examples:
+            code: 401
+            message: 'The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or other security parameters were invalid'
+            type: unauthorized
+definitions:
+  Token:
+    type: object
+    properties:
+      token:
+        description: Token Value
+        type: string
+  Webhook:
+    type: object
+    properties:
+      success:
+        description: Webhook Response
+        type: boolean
+  User:
+    type: object
+    properties:
+      id:
+        description: Unique identifier for the Acme Bank user
+        type: integer
+        minLength: 1
+        example: 1
+      username:
+        description: User supplied username
+        type: string
+        minLength: 4
+        example: dmwesterhoff
+      pinn_user_id:
+        description: 'The Pinn user identifier, created by Pinn API at the time of user creation'
+        type: string
+        example: usr_RMcDzQsFw6g7lhmk
+      object:
+        description: 'The type of object, which is always `user`'
+        type: string
+        example: user
+      created:
+        description: 'Timestamp of creation, an integer that is the number of seconds since unix epoch'
+        type: integer
+        example: 1533171964
+      key:
+        description: 'The key ID, which is used for signing requests to identify the public key that should be used to verify the signature'
+        type: string
+        example: '76:00:cc:81:29:cd:55:5e:88:6a:7a:2e:f7:4d:39:da'
+  Error:
+    type: object
+    properties:
+      code:
+        description: The HTTP Response status code
+        type: integer
+        example: 400
+      message:
+        description: Developer friendly error message
+        type: string
+        example: The browser (or proxy) sent a request that this server could not understand.
+      type:
+        description: 'A type value for the error, that is a static string and can be used for more robust error handling than the code value'
+        type: string
+        example: bad_request
